@@ -26,7 +26,7 @@ export const SYSTEMS: {
   { id: "email", label: "E-mail corporativo", domain: null, format: "ponto" },
   { id: "vendas", label: "Plataforma de Vendas", domain: "vendas.com.br", format: "ponto" },
   { id: "marketing", label: "Marketing", domain: "marketing.com.br", format: "ponto" },
-  { id: "financeiro", label: "ERP Financeiro", domain: "financeiro.com.br", format: "junto" },
+  { id: "financeiro", label: "ERP Financeiro", domain: "financeiro.com.br", format: "ponto" },
   { id: "rh", label: "Portal RH", domain: "rh.com.br", format: "ponto" },
   { id: "helpdesk", label: "Helpdesk", domain: "suporte.com.br", format: "ponto" },
   { id: "codigo", label: "Repositório de Código", domain: "dev.com.br", format: "ponto" },

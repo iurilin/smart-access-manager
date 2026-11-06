@@ -40,9 +40,9 @@ describe("e-mails por cargo", () => {
     }
   });
 
-  it("Financeiro usa o nome junto, sem ponto", () => {
+  it("Financeiro mantém o ponto entre nome e sobrenome", () => {
     expect(emailsForRole("joao.santos", "loma.com.br", "financeiro")[1]?.email).toBe(
-      "joaosantos@financeiro.com.br",
+      "joao.santos@financeiro.com.br",
     );
   });
 
