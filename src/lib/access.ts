@@ -71,6 +71,26 @@ export function buildEmail(username: string, domain: string): string {
   return `${username}@${domain.trim().toLowerCase()}`;
 }
 
+/** Senha inicial igual para todos os e-mails; o funcionário é obrigado a trocar no primeiro acesso. */
+export const INITIAL_PASSWORD = "Mudar@2026";
+export const MUST_CHANGE_PASSWORD_ON_FIRST_LOGIN = true;
+
+export type Credential = {
+  systemId: SystemId;
+  email: string;
+  password: string;
+  mustChangePassword: boolean;
+};
+
+/** E-mails do cargo já com a senha inicial e a exigência de troca no primeiro acesso. */
+export function credentialsForRole(username: string, mainDomain: string, role: RoleId): Credential[] {
+  return emailsForRole(username, mainDomain, role).map((e) => ({
+    ...e,
+    password: INITIAL_PASSWORD,
+    mustChangePassword: MUST_CHANGE_PASSWORD_ON_FIRST_LOGIN,
+  }));
+}
+
 /** Todos os e-mails do funcionário: o principal primeiro, depois um por acesso do cargo. */
 export function emailsForRole(
   username: string,

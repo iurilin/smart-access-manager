@@ -6,6 +6,7 @@ import {
   Copy,
   GitBranch,
   Headset,
+  KeyRound,
   Mail,
   Megaphone,
   Server,
@@ -26,7 +27,7 @@ import {
   SYSTEMS,
   accessForRole,
   buildEmail,
-  emailsForRole,
+  credentialsForRole,
   isValidUsername,
   normalizeUsername,
   type RoleId,
@@ -107,7 +108,9 @@ function Index() {
   const mainDomain = domain || DEFAULT_DOMAIN;
   const email = buildEmail(previewUser, mainDomain);
   const access = accessForRole(role);
-  const generated = emailsForRole(previewUser, mainDomain, role);
+  const generated = credentialsForRole(previewUser, mainDomain, role);
+  const password = generated[0]?.password ?? "";
+  const mustChange = generated[0]?.mustChangePassword ?? false;
   const duplicate = valid && accounts.some((a) => a.email === email);
   const canCreate = valid && !duplicate && domain.trim().length > 3;
 
@@ -254,6 +257,7 @@ function Index() {
                 );
               })}
             </ul>
+            <PasswordNote password={password} mustChange={mustChange} className="mt-3" />
             <ul className="mt-3 flex flex-wrap gap-1.5">
               {SYSTEMS.filter((s) => !access.includes(s.id)).map((s) => (
                 <li key={s.id} className="text-xs text-muted-foreground/50 line-through">
@@ -301,7 +305,11 @@ function AccountRow({ account, onDelete }: { account: Account; onDelete: () => v
   const roleLabel = ROLES.find((r) => r.id === account.role)?.label ?? account.role;
   const emails = useMemo(
     () =>
-      emailsForRole(account.username, account.email.split("@")[1] ?? DEFAULT_DOMAIN, account.role),
+      credentialsForRole(
+        account.username,
+        account.email.split("@")[1] ?? DEFAULT_DOMAIN,
+        account.role,
+      ),
     [account.username, account.email, account.role],
   );
 
@@ -352,6 +360,54 @@ function AccountRow({ account, onDelete }: { account: Account; onDelete: () => v
           );
         })}
       </ul>
+      <PasswordNote
+        password={emails[0]?.password ?? ""}
+        mustChange={emails[0]?.mustChangePassword ?? false}
+        className="mt-2"
+        compact
+      />
     </li>
+  );
+}
+
+function PasswordNote({
+  password,
+  mustChange,
+  className,
+  compact = false,
+}: {
+  password: string;
+  mustChange: boolean;
+  className?: string;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-2 rounded-md border border-dashed border-primary/50 bg-card",
+        compact ? "px-2 py-1 text-xs" : "px-3 py-2 text-sm",
+        className,
+      )}
+    >
+      <KeyRound className={cn("shrink-0 text-primary", compact ? "size-3" : "size-4")} />
+      <span className="text-muted-foreground">Senha inicial{compact ? "" : " (todos os e-mails)"}:</span>
+      <span className="font-mono font-semibold">{password}</span>
+      <button
+        type="button"
+        aria-label="Copiar senha"
+        className="rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+        onClick={() => {
+          navigator.clipboard.writeText(password);
+          toast("Senha copiada");
+        }}
+      >
+        <Copy className={compact ? "size-3" : "size-3.5"} />
+      </button>
+      {mustChange && (
+        <span className="ml-auto rounded bg-accent px-1.5 py-0.5 text-[11px] font-semibold text-accent-foreground">
+          troca obrigatória no 1º acesso
+        </span>
+      )}
+    </div>
   );
 }

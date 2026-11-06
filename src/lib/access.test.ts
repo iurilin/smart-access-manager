@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   SYSTEMS,
   accessForRole,
+  credentialsForRole,
   emailsForRole,
   isValidUsername,
   normalizeUsername,
@@ -47,6 +48,21 @@ describe("e-mails por cargo", () => {
 
   it("Dev recebe um e-mail para cada acesso", () => {
     expect(emailsForRole("joao.santos", "loma.com.br", "dev")).toHaveLength(SYSTEMS.length);
+  });
+});
+
+describe("senhas", () => {
+  it("todos os e-mails recebem a senha inicial Mudar@2026", () => {
+    for (const role of ["dev", "comercial"] as const) {
+      for (const c of credentialsForRole("joao.santos", "loma.com.br", role)) {
+        expect(c.password).toBe("Mudar@2026");
+      }
+    }
+  });
+
+  it("todos os e-mails exigem troca de senha no primeiro acesso", () => {
+    const creds = credentialsForRole("joao.santos", "loma.com.br", "dev");
+    expect(creds.every((c) => c.mustChangePassword === true)).toBe(true);
   });
 });
 
