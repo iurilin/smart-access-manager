@@ -33,14 +33,14 @@ describe("e-mails por cargo", () => {
 
   it("o primeiro e-mail é sempre o principal, igual para todo cargo", () => {
     for (const role of ["dev", "ti", "comercial", "financeiro"] as const) {
-      expect(emailsForRole("joao.santos", "loma.com.br", role)[0].email).toBe(
+      expect(emailsForRole("joao.santos", "loma.com.br", role)[0]?.email).toBe(
         "joao.santos@loma.com.br",
       );
     }
   });
 
   it("Financeiro usa o nome junto, sem ponto", () => {
-    expect(emailsForRole("joao.santos", "loma.com.br", "financeiro")[1].email).toBe(
+    expect(emailsForRole("joao.santos", "loma.com.br", "financeiro")[1]?.email).toBe(
       "joaosantos@financeiro.com.br",
     );
   });
