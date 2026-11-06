@@ -11,16 +11,27 @@ export type SystemId =
 
 export type RoleId = "dev" | "ti" | "comercial" | "marketing" | "financeiro" | "rh" | "suporte";
 
-export const SYSTEMS: { id: SystemId; label: string }[] = [
-  { id: "email", label: "E-mail corporativo" },
-  { id: "vendas", label: "Plataforma de Vendas" },
-  { id: "marketing", label: "Marketing" },
-  { id: "financeiro", label: "ERP Financeiro" },
-  { id: "rh", label: "Portal RH" },
-  { id: "helpdesk", label: "Helpdesk" },
-  { id: "codigo", label: "Repositório de Código" },
-  { id: "cloud", label: "Servidores & Cloud" },
-  { id: "admin", label: "Painel Admin" },
+export const DEFAULT_DOMAIN = "loma.com.br";
+
+/**
+ * domain: domínio do e-mail daquele acesso (null = usa o domínio principal da empresa).
+ * format: "ponto" -> joao.santos  |  "junto" -> joaosantos
+ */
+export const SYSTEMS: {
+  id: SystemId;
+  label: string;
+  domain: string | null;
+  format: "ponto" | "junto";
+}[] = [
+  { id: "email", label: "E-mail corporativo", domain: null, format: "ponto" },
+  { id: "vendas", label: "Plataforma de Vendas", domain: "vendas.com.br", format: "ponto" },
+  { id: "marketing", label: "Marketing", domain: "marketing.com.br", format: "ponto" },
+  { id: "financeiro", label: "ERP Financeiro", domain: "financeiro.com.br", format: "junto" },
+  { id: "rh", label: "Portal RH", domain: "rh.com.br", format: "ponto" },
+  { id: "helpdesk", label: "Helpdesk", domain: "suporte.com.br", format: "ponto" },
+  { id: "codigo", label: "Repositório de Código", domain: "dev.com.br", format: "ponto" },
+  { id: "cloud", label: "Servidores & Cloud", domain: "ti.com.br", format: "ponto" },
+  { id: "admin", label: "Painel Admin", domain: "admin.com.br", format: "ponto" },
 ];
 
 const ALL: SystemId[] = SYSTEMS.map((s) => s.id);
@@ -58,4 +69,17 @@ export function isValidUsername(username: string): boolean {
 
 export function buildEmail(username: string, domain: string): string {
   return `${username}@${domain.trim().toLowerCase()}`;
+}
+
+/** Todos os e-mails do funcionário: o principal primeiro, depois um por acesso do cargo. */
+export function emailsForRole(
+  username: string,
+  mainDomain: string,
+  role: RoleId,
+): { systemId: SystemId; email: string }[] {
+  const access = accessForRole(role);
+  return SYSTEMS.filter((s) => access.includes(s.id)).map((s) => {
+    const user = s.format === "junto" ? username.replace(/\./g, "") : username;
+    return { systemId: s.id, email: buildEmail(user, s.domain ?? mainDomain) };
+  });
 }
