@@ -21,10 +21,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
+  DEFAULT_DOMAIN,
   ROLES,
   SYSTEMS,
   accessForRole,
   buildEmail,
+  emailsForRole,
   isValidUsername,
   normalizeUsername,
   type RoleId,
@@ -75,7 +77,7 @@ const STORAGE_ACCOUNTS = "provisionador.accounts";
 const STORAGE_DOMAIN = "provisionador.domain";
 
 function Index() {
-  const [domain, setDomain] = useState("empresa.com.br");
+  const [domain, setDomain] = useState(DEFAULT_DOMAIN);
   const [rawName, setRawName] = useState("");
   const [role, setRole] = useState<RoleId>("dev");
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -86,7 +88,7 @@ function Index() {
       const a = localStorage.getItem(STORAGE_ACCOUNTS);
       const d = localStorage.getItem(STORAGE_DOMAIN);
       if (a) setAccounts(JSON.parse(a));
-      if (d) setDomain(d);
+      if (d && d !== "empresa.com.br") setDomain(d);
     } catch {
       /* ignore */
     }
@@ -101,8 +103,11 @@ function Index() {
 
   const username = normalizeUsername(rawName);
   const valid = isValidUsername(username);
-  const email = buildEmail(username || "nome.sobrenome", domain || "empresa.com.br");
+  const previewUser = username || "nome.sobrenome";
+  const mainDomain = domain || DEFAULT_DOMAIN;
+  const email = buildEmail(previewUser, mainDomain);
   const access = accessForRole(role);
+  const generated = emailsForRole(previewUser, mainDomain, role);
   const duplicate = valid && accounts.some((a) => a.email === email);
   const canCreate = valid && !duplicate && domain.trim().length > 3;
 
@@ -119,7 +124,7 @@ function Index() {
     setAccounts((prev) => [account, ...prev]);
     setRawName("");
     toast.success(`${email} criado`, {
-      description: `${access.length} acesso${access.length > 1 ? "s" : ""} liberado${access.length > 1 ? "s" : ""}`,
+      description: `${generated.length} e-mail${generated.length > 1 ? "s" : ""} gerado${generated.length > 1 ? "s" : ""}`,
     });
   }
 
@@ -220,24 +225,41 @@ function Index() {
             >
               {email}
             </p>
-            <ul className="mt-4 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-              {SYSTEMS.map((s) => {
-                const Icon = ICONS[s.id];
-                const on = access.includes(s.id);
+            <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              e-mails gerados · {generated.length}
+            </p>
+            <ul className="mt-2 flex flex-col gap-1.5">
+              {generated.map((g, i) => {
+                const Icon = ICONS[g.systemId];
+                const label = SYSTEMS.find((s) => s.id === g.systemId)?.label;
                 return (
                   <li
-                    key={s.id}
-                    className={cn(
-                      "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-all",
-                      on ? "bg-card text-foreground" : "text-muted-foreground/50 line-through",
-                    )}
+                    key={g.systemId}
+                    className="flex items-center gap-2 rounded-md bg-card px-2 py-1.5 text-sm"
                   >
-                    <Icon className={cn("size-4 shrink-0", on && "text-primary")} />
-                    <span className="flex-1">{s.label}</span>
-                    {on && <Check className="size-4 text-success" />}
+                    <Icon className="size-4 shrink-0 text-primary" />
+                    <span
+                      className={cn(
+                        "flex-1 break-all font-mono",
+                        valid ? "text-foreground" : "text-muted-foreground/60",
+                        i === 0 && "font-semibold",
+                      )}
+                    >
+                      {g.email}
+                    </span>
+                    <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
+                      {i === 0 ? "principal" : label}
+                    </span>
                   </li>
                 );
               })}
+            </ul>
+            <ul className="mt-3 flex flex-wrap gap-1.5">
+              {SYSTEMS.filter((s) => !access.includes(s.id)).map((s) => (
+                <li key={s.id} className="text-xs text-muted-foreground/50 line-through">
+                  {s.label}
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -277,7 +299,11 @@ function Index() {
 
 function AccountRow({ account, onDelete }: { account: Account; onDelete: () => void }) {
   const roleLabel = ROLES.find((r) => r.id === account.role)?.label ?? account.role;
-  const access = useMemo(() => accessForRole(account.role), [account.role]);
+  const emails = useMemo(
+    () =>
+      emailsForRole(account.username, account.email.split("@")[1] ?? DEFAULT_DOMAIN, account.role),
+    [account.username, account.email, account.role],
+  );
 
   return (
     <li className="group animate-row-in rounded-lg border border-border bg-background p-3">
@@ -307,22 +333,25 @@ function AccountRow({ account, onDelete }: { account: Account; onDelete: () => v
           <Trash2 />
         </Button>
       </div>
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {access.map((id) => {
-          const Icon = ICONS[id];
-          const label = SYSTEMS.find((s) => s.id === id)?.label;
+      <ul className="mt-2 flex flex-col gap-1">
+        {emails.slice(1).map((g) => {
+          const Icon = ICONS[g.systemId];
+          const label = SYSTEMS.find((s) => s.id === g.systemId)?.label;
           return (
-            <span
-              key={id}
+            <li
+              key={g.systemId}
               title={label}
-              className="inline-flex items-center gap-1 rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground"
+              className="flex items-center gap-2 rounded border border-border px-2 py-1 text-xs"
             >
-              <Icon className="size-3" />
-              {label}
-            </span>
+              <Icon className="size-3 shrink-0 text-muted-foreground" />
+              <span className="flex-1 truncate font-mono">{g.email}</span>
+              <span className="hidden shrink-0 text-[11px] text-muted-foreground sm:inline">
+                {label}
+              </span>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </li>
   );
 }
