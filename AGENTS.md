@@ -28,3 +28,6 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Role-to-system access rules live only in `src/lib/access.ts` (covered by `access.test.ts`); UI derives access from the role at render time so changing a rule updates every account.
