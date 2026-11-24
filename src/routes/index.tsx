@@ -31,11 +31,11 @@ const ACCOUNTS = [
   { role: "Dev", emails: ["carlos.silva@loma.com.br", "carlos.silva@dev.com.br", "carlos.silva@ti.com.br"] },
 ];
 const TERMINALS = [
-  { name: "Catraca 2 - Entrada", url: "http://192.168.20.102" },
-  { name: "Catraca 1 - Entrada", url: "http://192.168.20.103" },
-  { name: "Portão", url: "http://192.168.20.129" },
+  { name: "Matriz catraca 1", url: "http://192.168.20.103" },
+  { name: "Matriz Catraca 2", url: "http://192.168.20.102" },
+  { name: "Matriz Portao", url: "http://192.168.20.129" },
   { name: "Boa Ventura", url: "http://lomaboaventuraomada.ddns.net" },
-  { name: "Facial Osasco", url: "http://lomaosascoomada.ddns.net:8080" },
+  { name: "Osasco", url: "http://lomaosascoomada.ddns.net:8080" },
 ];
 
 function Index() {
