@@ -30,13 +30,7 @@ const ACCOUNTS = [
   { role: "Financeiro", emails: ["ana.souza@loma.com.br", "ana.souza@financeiro.com.br"] },
   { role: "Dev", emails: ["carlos.silva@loma.com.br", "carlos.silva@dev.com.br", "carlos.silva@ti.com.br"] },
 ];
-const TERMINALS = [
-  { name: "Matriz catraca 1", url: "http://192.168.20.103" },
-  { name: "Matriz Catraca 2", url: "http://192.168.20.102" },
-  { name: "Matriz Portao", url: "http://192.168.20.129" },
-  { name: "Boa Ventura", url: "http://lomaboaventuraomada.ddns.net" },
-  { name: "Osasco", url: "http://lomaosascoomada.ddns.net:8080" },
-];
+const TERMINALS = ["Matriz catraca 1", "Matriz Catraca 2", "Matriz Portao", "Boa Ventura", "Osasco"];
 
 function Index() {
   const [tab, setTab] = useState<"emails" | "facial">("emails");
@@ -167,7 +161,7 @@ function CardHead({ icon: Icon, title, sub, dark }: { icon: typeof Layers; title
 }
 
 function FacialScreen() {
-  const [sel, setSel] = useState<string[]>(TERMINALS.map((t) => t.name));
+  const [sel, setSel] = useState<string[]>([...TERMINALS]);
   const all = sel.length === TERMINALS.length;
   return (
     <>
@@ -221,20 +215,19 @@ function FacialScreen() {
           <section className="rounded-2xl border border-border bg-card p-6">
             <div className="flex items-start justify-between gap-4">
               <CardHead icon={Layers} title="Terminais de destino" sub="Onde a facial será sincronizada" />
-              <button onClick={() => setSel(all ? [] : TERMINALS.map((t) => t.name))} className="shrink-0 text-sm font-semibold text-accent-foreground hover:underline">
+              <button onClick={() => setSel(all ? [] : [...TERMINALS])} className="shrink-0 text-sm font-semibold text-accent-foreground hover:underline">
                 {all ? "Desmarcar todos" : "Marcar todos"}
               </button>
             </div>
             <ul className="mt-5 divide-y divide-border overflow-hidden rounded-xl border border-border">
-              {TERMINALS.map((t) => {
-                const on = sel.includes(t.name);
+              {TERMINALS.map((name) => {
+                const on = sel.includes(name);
                 return (
-                  <li key={t.name}>
-                    <button onClick={() => setSel((p) => (on ? p.filter((x) => x !== t.name) : [...p, t.name]))}
+                  <li key={name}>
+                    <button onClick={() => setSel((p) => (on ? p.filter((x) => x !== name) : [...p, name]))}
                       className={cn("flex w-full items-center gap-3 px-4 py-3 text-left transition-colors", on ? "bg-accent/50" : "hover:bg-muted")}>
                       <span className={cn("size-2.5 shrink-0 rounded-full", on ? "bg-primary" : "bg-border")} />
-                      <span className="flex-1 text-sm font-semibold">{t.name}</span>
-                      <span className="hidden truncate font-mono text-xs text-muted-foreground sm:block">{t.url}</span>
+                      <span className="flex-1 text-sm font-semibold">{name}</span>
                       <span className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", on ? "bg-primary" : "bg-input")}>
                         <span className={cn("absolute top-0.5 size-4 rounded-full bg-card transition-all", on ? "left-[18px]" : "left-0.5")} />
                       </span>
