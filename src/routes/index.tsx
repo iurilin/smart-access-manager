@@ -172,73 +172,83 @@ function FacialScreen() {
   return (
     <>
       <Title kicker="controle de acesso" title="Cadastro de facial" />
-      <div className="flex flex-col gap-6">
-        <section className="rounded-2xl border border-border bg-card p-6 shadow-pop">
-          <CardHead icon={UserPlus} title="Identificação do Usuário" sub="Dados de cadastro e identificador numérico interno da facial" />
-          <div className="mt-6 grid gap-5 md:grid-cols-3">
-            <div>
-              <label className="text-sm font-semibold">Código na Facial (ID)</label>
-              <input className={cn(input, "mt-2 font-mono")} defaultValue="6027" />
-              <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-primary"><Sparkles className="size-3" />Sugestão automática (próximo disponível)</p>
-            </div>
-            <div>
-              <label className="text-sm font-semibold">Matrícula / Registro</label>
-              <input className={cn(input, "mt-2")} placeholder="Ex: 2024001 ou CPF" />
-              <p className="mt-1.5 text-xs text-muted-foreground">Número de matrícula no RH ou código</p>
-            </div>
-            <div>
-              <label className="text-sm font-semibold">Nome Completo</label>
-              <input className={cn(input, "mt-2")} placeholder="Ex: Carlos Eduardo Silva" />
-              <p className="mt-1.5 text-xs text-muted-foreground">Nome exibido na tela da facial</p>
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        {/* Coluna da foto */}
+        <aside className="flex flex-col gap-4 rounded-2xl bg-ink p-6 text-ink-foreground">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Biometria</p>
+            <span className="rounded-full bg-ink-foreground/10 px-2 py-0.5 text-[11px]">opcional</span>
+          </div>
+          <div className="relative mx-auto grid aspect-[3/4] w-full place-items-center rounded-2xl border-2 border-dashed border-primary/50 bg-ink-foreground/5">
+            <span className="absolute left-3 top-3 size-5 rounded-tl-lg border-l-2 border-t-2 border-primary" />
+            <span className="absolute right-3 top-3 size-5 rounded-tr-lg border-r-2 border-t-2 border-primary" />
+            <span className="absolute bottom-3 left-3 size-5 rounded-bl-lg border-b-2 border-l-2 border-primary" />
+            <span className="absolute bottom-3 right-3 size-5 rounded-br-lg border-b-2 border-r-2 border-primary" />
+            <div className="flex flex-col items-center gap-2 text-ink-foreground/60">
+              <ScanFace className="size-16 text-primary" strokeWidth={1.25} />
+              <span className="text-sm">Sem foto</span>
             </div>
           </div>
-          <div className="mt-6 border-t border-border pt-5">
-            <p className="text-sm font-semibold">Foto para Reconhecimento Facial <span className="font-normal text-muted-foreground">(opcional)</span></p>
-            <div className="mt-3 flex gap-4">
-              <button className="flex flex-1 items-center justify-center gap-4 rounded-xl border-2 border-dashed border-input py-8 transition-colors hover:border-primary hover:bg-accent/40">
-                <div className="grid size-12 place-items-center rounded-full bg-primary/15 text-primary"><CloudUpload className="size-6" /></div>
-                <div className="text-left">
-                  <p className="text-sm font-semibold">Clique para selecionar foto</p>
-                  <p className="text-xs text-muted-foreground">Recomendado: JPEG até 500 KB, rosto centralizado e boa iluminação</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="secondary"><CloudUpload />Enviar</Button>
+            <Button><Camera />Capturar</Button>
+          </div>
+          <p className="text-xs text-ink-foreground/60">JPEG até 500 KB, rosto centralizado e boa iluminação.</p>
+        </aside>
+
+        <div className="flex flex-col gap-6">
+          <section className="rounded-2xl border border-border bg-card p-6 shadow-pop">
+            <CardHead icon={UserPlus} title="Identificação do usuário" sub="Dados de cadastro e ID interno da facial" />
+            <div className="mt-6 grid gap-5 sm:grid-cols-[140px_1fr]">
+              <div>
+                <label className="text-sm font-semibold">ID na facial</label>
+                <div className="mt-2 rounded-lg bg-accent px-4 py-2 text-center font-mono text-2xl font-bold text-accent-foreground">6027</div>
+                <p className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-accent-foreground"><Sparkles className="size-3" />próximo livre</p>
+              </div>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="text-sm font-semibold">Nome completo</label>
+                  <input className={cn(input, "mt-2")} placeholder="Ex: Carlos Eduardo Silva" />
                 </div>
-              </button>
-              <div className="grid w-24 place-items-center rounded-xl bg-ink text-ink-foreground/60">
-                <div className="flex flex-col items-center gap-1 text-xs"><Camera className="size-5" />Sem foto</div>
+                <div>
+                  <label className="text-sm font-semibold">Matrícula / Registro</label>
+                  <input className={cn(input, "mt-2")} placeholder="Ex: 2024001 ou CPF" />
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="rounded-2xl bg-ink p-6 text-ink-foreground">
-          <div className="flex items-start justify-between gap-4">
-            <CardHead icon={Layers} title="Terminais de Destino" sub="Selecione para quais faciais as credenciais e acessos serão sincronizados" dark />
-            <button onClick={() => setSel(all ? [] : TERMINALS.map((t) => t.name))} className="shrink-0 text-sm font-semibold hover:text-primary">
-              {all ? "Desmarcar todos" : "Marcar todos"}
-            </button>
-          </div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {TERMINALS.map((t) => {
-              const on = sel.includes(t.name);
-              return (
-                <button key={t.name} onClick={() => setSel((p) => (on ? p.filter((x) => x !== t.name) : [...p, t.name]))}
-                  className={cn("flex items-start gap-3 rounded-xl border p-3 text-left transition-colors",
-                    on ? "border-primary bg-primary/15" : "border-ink-foreground/15 hover:border-ink-foreground/40")}>
-                  <span className={cn("mt-0.5 grid size-5 shrink-0 place-items-center rounded", on ? "bg-primary text-primary-foreground" : "border border-ink-foreground/40")}>
-                    {on && <Check className="size-3.5" />}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold">{t.name}</span>
-                    <span className="block truncate font-mono text-xs text-ink-foreground/60">{t.url}</span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+          <section className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-start justify-between gap-4">
+              <CardHead icon={Layers} title="Terminais de destino" sub="Onde a facial será sincronizada" />
+              <button onClick={() => setSel(all ? [] : TERMINALS.map((t) => t.name))} className="shrink-0 text-sm font-semibold text-accent-foreground hover:underline">
+                {all ? "Desmarcar todos" : "Marcar todos"}
+              </button>
+            </div>
+            <ul className="mt-5 divide-y divide-border overflow-hidden rounded-xl border border-border">
+              {TERMINALS.map((t) => {
+                const on = sel.includes(t.name);
+                return (
+                  <li key={t.name}>
+                    <button onClick={() => setSel((p) => (on ? p.filter((x) => x !== t.name) : [...p, t.name]))}
+                      className={cn("flex w-full items-center gap-3 px-4 py-3 text-left transition-colors", on ? "bg-accent/50" : "hover:bg-muted")}>
+                      <span className={cn("size-2.5 shrink-0 rounded-full", on ? "bg-primary" : "bg-border")} />
+                      <span className="flex-1 text-sm font-semibold">{t.name}</span>
+                      <span className="hidden truncate font-mono text-xs text-muted-foreground sm:block">{t.url}</span>
+                      <span className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", on ? "bg-primary" : "bg-input")}>
+                        <span className={cn("absolute top-0.5 size-4 rounded-full bg-card transition-all", on ? "left-[18px]" : "left-0.5")} />
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
 
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{sel.length} terminais selecionados</p>
-          <Button size="lg"><Send />Cadastrar e Enviar</Button>
+          <div className="flex items-center justify-between rounded-2xl bg-ink px-5 py-4 text-ink-foreground">
+            <p className="text-sm"><span className="font-bold text-primary">{sel.length}</span> de {TERMINALS.length} terminais</p>
+            <Button size="lg"><Send />Cadastrar e enviar</Button>
+          </div>
         </div>
       </div>
     </>
