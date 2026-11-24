@@ -59,7 +59,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   --shadow-card: 0 1px 0 var(--border), 0 12px 32px -16px oklch(0.2 0.02 60 / 0.25);
-  --shadow-pop: 4px 4px 0 var(--ink);
+  --shadow-pop: 0 20px 40px -24px color-mix(in oklab, var(--primary) 45%, transparent);
 
   --animate-row-in: row-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -77,29 +77,29 @@
 
 :root {
   --radius: 0.5rem;
-  --background: oklch(0.962 0.014 85);
+  --background: oklch(0.975 0.004 260);
   --foreground: oklch(0.2 0.02 260);
-  --card: oklch(0.99 0.006 85);
+  --card: oklch(1 0 0);
   --card-foreground: oklch(0.2 0.02 260);
-  --popover: oklch(0.99 0.006 85);
+  --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.02 260);
-  --primary: oklch(0.64 0.2 40);
-  --primary-foreground: oklch(0.99 0.006 85);
-  --secondary: oklch(0.93 0.018 85);
+  --primary: oklch(0.546 0.245 262.9);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.01 260);
   --secondary-foreground: oklch(0.2 0.02 260);
-  --muted: oklch(0.93 0.016 85);
+  --muted: oklch(0.955 0.008 260);
   --muted-foreground: oklch(0.5 0.02 260);
-  --accent: oklch(0.92 0.05 60);
-  --accent-foreground: oklch(0.3 0.08 40);
+  --accent: oklch(0.93 0.05 262);
+  --accent-foreground: oklch(0.4 0.2 262);
   --destructive: oklch(0.56 0.22 27);
-  --destructive-foreground: oklch(0.99 0.006 85);
+  --destructive-foreground: oklch(1 0 0);
   --success: oklch(0.58 0.14 150);
-  --success-foreground: oklch(0.99 0.006 85);
-  --ink: oklch(0.2 0.02 260);
-  --ink-foreground: oklch(0.962 0.014 85);
-  --border: oklch(0.86 0.02 80);
-  --input: oklch(0.86 0.02 80);
-  --ring: oklch(0.64 0.2 40);
+  --success-foreground: oklch(1 0 0);
+  --ink: oklch(0.16 0.02 262);
+  --ink-foreground: oklch(1 0 0);
+  --border: oklch(0.9 0.01 260);
+  --input: oklch(0.9 0.01 260);
+  --ring: oklch(0.546 0.245 262.9);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -124,7 +124,5 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    background-image: radial-gradient(oklch(0.2 0.02 260 / 0.07) 1px, transparent 1px);
-    background-size: 22px 22px;
-  }
+      }
 }

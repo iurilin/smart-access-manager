@@ -30,4 +30,4 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
-- Role-to-system access rules live only in `src/lib/access.ts` (covered by `access.test.ts`); UI derives access from the role at render time so changing a rule updates every account.
+- The UI is a design-only prototype: screens use static mock data in `src/routes/index.tsx`; `src/lib/access.ts` is kept but not wired to the UI.

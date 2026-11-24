@@ -1,52 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useState } from "react";
 import {
-  AtSign,
-  Check,
-  Copy,
-  GitBranch,
-  Headset,
-  KeyRound,
-  Mail,
-  Megaphone,
-  Server,
-  ShieldCheck,
-  ShoppingCart,
-  Trash2,
-  Users,
-  Wallet,
-  type LucideIcon,
+  Camera, CloudUpload, Copy, KeyRound, Layers, Mail, ScanFace, Send, Sparkles, Trash2, UserPlus, Check,
 } from "lucide-react";
-import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  DEFAULT_DOMAIN,
-  ROLES,
-  SYSTEMS,
-  accessForRole,
-  buildEmail,
-  credentialsForRole,
-  isValidUsername,
-  normalizeUsername,
-  type RoleId,
-  type SystemId,
-} from "@/lib/access";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Provisionador de E-mails Corporativos" },
-      {
-        name: "description",
-        content: "Crie e-mails corporativos em segundos com os acessos certos para cada cargo.",
-      },
-      { property: "og:title", content: "Provisionador de E-mails Corporativos" },
-      {
-        property: "og:description",
-        content: "Informe nome.sobrenome e o cargo: o e-mail e os acessos são gerados na hora.",
-      },
+      { title: "Loma · Cadastro de E-mails e Facial" },
+      { name: "description", content: "Painel Loma para cadastrar e-mails corporativos e reconhecimento facial de funcionários." },
+      { property: "og:title", content: "Loma · Cadastro de E-mails e Facial" },
+      { property: "og:description", content: "Crie e-mails por cargo e cadastre a facial nos terminais em uma só tela." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -54,360 +20,227 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const ICONS: Record<SystemId, LucideIcon> = {
-  email: Mail,
-  vendas: ShoppingCart,
-  marketing: Megaphone,
-  financeiro: Wallet,
-  rh: Users,
-  helpdesk: Headset,
-  codigo: GitBranch,
-  cloud: Server,
-  admin: ShieldCheck,
-};
-
-type Account = {
-  id: string;
-  username: string;
-  email: string;
-  role: RoleId;
-  createdAt: number;
-};
-
-const STORAGE_ACCOUNTS = "provisionador.accounts";
-const STORAGE_DOMAIN = "provisionador.domain";
+const ROLES = ["Dev", "TI", "Comercial", "Marketing", "Financeiro", "RH", "Suporte"];
+const EMAILS = [
+  { email: "joao.santos@loma.com.br", label: "principal" },
+  { email: "joao.santos@vendas.com.br", label: "Plataforma de Vendas" },
+];
+const ACCOUNTS = [
+  { role: "Comercial", emails: ["joao.santos@loma.com.br", "joao.santos@vendas.com.br"] },
+  { role: "Financeiro", emails: ["ana.souza@loma.com.br", "ana.souza@financeiro.com.br"] },
+  { role: "Dev", emails: ["carlos.silva@loma.com.br", "carlos.silva@dev.com.br", "carlos.silva@ti.com.br"] },
+];
+const TERMINALS = [
+  { name: "Catraca 2 - Entrada", url: "http://192.168.20.102" },
+  { name: "Catraca 1 - Entrada", url: "http://192.168.20.103" },
+  { name: "Portão", url: "http://192.168.20.129" },
+  { name: "Boa Ventura", url: "http://lomaboaventuraomada.ddns.net" },
+  { name: "Facial Osasco", url: "http://lomaosascoomada.ddns.net:8080" },
+];
 
 function Index() {
-  const [domain, setDomain] = useState(DEFAULT_DOMAIN);
-  const [rawName, setRawName] = useState("");
-  const [role, setRole] = useState<RoleId>("dev");
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    try {
-      const a = localStorage.getItem(STORAGE_ACCOUNTS);
-      const d = localStorage.getItem(STORAGE_DOMAIN);
-      if (a) setAccounts(JSON.parse(a));
-      if (d && d !== "empresa.com.br") setDomain(d);
-    } catch {
-      /* ignore */
-    }
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!loaded) return;
-    localStorage.setItem(STORAGE_ACCOUNTS, JSON.stringify(accounts));
-    localStorage.setItem(STORAGE_DOMAIN, domain);
-  }, [accounts, domain, loaded]);
-
-  const username = normalizeUsername(rawName);
-  const valid = isValidUsername(username);
-  const previewUser = username || "nome.sobrenome";
-  const mainDomain = domain || DEFAULT_DOMAIN;
-  const email = buildEmail(previewUser, mainDomain);
-  const access = accessForRole(role);
-  const generated = credentialsForRole(previewUser, mainDomain, role);
-  const password = generated[0]?.password ?? "";
-  const mustChange = generated[0]?.mustChangePassword ?? false;
-  const duplicate = valid && accounts.some((a) => a.email === email);
-  const canCreate = valid && !duplicate && domain.trim().length > 3;
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!canCreate) return;
-    const account: Account = {
-      id: crypto.randomUUID(),
-      username,
-      email,
-      role,
-      createdAt: Date.now(),
-    };
-    setAccounts((prev) => [account, ...prev]);
-    setRawName("");
-    toast.success(`${email} criado`, {
-      description: `${generated.length} e-mail${generated.length > 1 ? "s" : ""} gerado${generated.length > 1 ? "s" : ""}`,
-    });
-  }
-
+  const [tab, setTab] = useState<"emails" | "facial">("emails");
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-5 py-8 lg:px-10 lg:py-12">
-      <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
-            // provisionamento de contas
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
-            Novo e-mail corporativo
-          </h1>
-        </div>
-        <label className="flex items-center gap-2 rounded-md border-2 border-ink bg-card px-3 py-2 font-mono text-sm">
-          <AtSign className="size-4 text-muted-foreground" />
-          <span className="sr-only">Domínio da empresa</span>
-          <input
-            value={domain}
-            onChange={(e) => setDomain(e.target.value.replace(/\s/g, "").toLowerCase())}
-            className="w-44 bg-transparent outline-none"
-            aria-label="Domínio da empresa"
-          />
-        </label>
-      </header>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.05fr]">
-        {/* Formulário */}
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-6 rounded-xl border-2 border-ink bg-card p-6 shadow-pop"
-        >
-          <div>
-            <label htmlFor="name" className="text-sm font-semibold">
-              Nome e último nome
-            </label>
-            <input
-              id="name"
-              autoFocus
-              autoComplete="off"
-              value={rawName}
-              onChange={(e) => setRawName(e.target.value)}
-              placeholder="iuri.lima"
-              className="mt-2 w-full rounded-md border-2 border-input bg-background px-4 py-3 font-mono text-lg outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
-            />
-            <p
-              className={cn(
-                "mt-2 h-4 font-mono text-xs",
-                duplicate ? "text-destructive" : "text-muted-foreground",
-              )}
-            >
-              {rawName === ""
-                ? "formato: nome.sobrenome"
-                : duplicate
-                  ? "esse e-mail já existe"
-                  : valid
-                    ? `usuário: ${username}`
-                    : "digite nome e último nome, ex: iuri.lima"}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm font-semibold">Cargo</p>
-            <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4" role="radiogroup">
-              {ROLES.map((r) => {
-                const active = r.id === role;
-                return (
-                  <button
-                    key={r.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    onClick={() => setRole(r.id)}
-                    className={cn(
-                      "rounded-md border-2 px-3 py-2 text-sm font-medium transition-all",
-                      active
-                        ? "border-ink bg-ink text-ink-foreground"
-                        : "border-input bg-background hover:border-ink",
-                    )}
-                  >
-                    {r.label}
-                  </button>
-                );
-              })}
+    <div className="min-h-screen">
+      <header className="bg-ink text-ink-foreground">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 lg:px-10">
+          <div className="flex items-center gap-3">
+            <div className="grid size-9 place-items-center rounded-lg bg-primary font-bold text-primary-foreground">L</div>
+            <div>
+              <p className="font-bold leading-none">Loma</p>
+              <p className="text-xs text-ink-foreground/60">Proteção Veicular · Admin</p>
             </div>
           </div>
+          <nav className="flex gap-1 rounded-lg bg-ink-foreground/10 p-1">
+            {([["emails", "E-mails", Mail], ["facial", "Facial", ScanFace]] as const).map(([id, label, Icon]) => (
+              <button key={id} onClick={() => setTab(id)}
+                className={cn("flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+                  tab === id ? "bg-primary text-primary-foreground" : "text-ink-foreground/70 hover:text-ink-foreground")}>
+                <Icon className="size-4" />{label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </header>
+      <main className="mx-auto max-w-6xl px-5 py-8 lg:px-10 lg:py-10">
+        {tab === "emails" ? <EmailsScreen /> : <FacialScreen />}
+      </main>
+    </div>
+  );
+}
 
-          {/* Prévia */}
-          <div className="rounded-lg bg-muted p-4">
-            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              prévia
-            </p>
-            <p
-              className={cn(
-                "mt-1 break-all font-mono text-lg font-bold",
-                valid ? "text-foreground" : "text-muted-foreground/60",
-              )}
-            >
-              {email}
-            </p>
-            <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              e-mails gerados · {generated.length}
-            </p>
-            <ul className="mt-2 flex flex-col gap-1.5">
-              {generated.map((g, i) => {
-                const Icon = ICONS[g.systemId];
-                const label = SYSTEMS.find((s) => s.id === g.systemId)?.label;
-                return (
-                  <li
-                    key={g.systemId}
-                    className="flex items-center gap-2 rounded-md bg-card px-2 py-1.5 text-sm"
-                  >
-                    <Icon className="size-4 shrink-0 text-primary" />
-                    <span
-                      className={cn(
-                        "flex-1 break-all font-mono",
-                        valid ? "text-foreground" : "text-muted-foreground/60",
-                        i === 0 && "font-semibold",
-                      )}
-                    >
-                      {g.email}
-                    </span>
-                    <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
-                      {i === 0 ? "principal" : label}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-            <PasswordNote password={password} mustChange={mustChange} className="mt-3" />
-            <ul className="mt-3 flex flex-wrap gap-1.5">
-              {SYSTEMS.filter((s) => !access.includes(s.id)).map((s) => (
-                <li key={s.id} className="text-xs text-muted-foreground/50 line-through">
-                  {s.label}
+function Title({ kicker, title }: { kicker: string; title: string }) {
+  return (
+    <div className="mb-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{kicker}</p>
+      <h1 className="mt-1 text-3xl font-bold tracking-tight">{title}</h1>
+    </div>
+  );
+}
+
+const input = "w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20";
+
+function EmailsScreen() {
+  const [role, setRole] = useState("Comercial");
+  return (
+    <>
+      <Title kicker="provisionamento" title="Novo e-mail corporativo" />
+      <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+        <section className="flex flex-col gap-6 rounded-2xl border border-border bg-card p-6 shadow-pop">
+          <div>
+            <label className="text-sm font-semibold">Nome e último nome</label>
+            <input className={cn(input, "mt-2 font-mono text-base")} placeholder="joao.santos" defaultValue="joao.santos" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold">Cargo</p>
+            <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+              {ROLES.map((r) => (
+                <button key={r} onClick={() => setRole(r)}
+                  className={cn("rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                    r === role ? "border-ink bg-ink text-ink-foreground" : "border-input hover:border-primary hover:text-primary")}>
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-xl bg-ink p-4 text-ink-foreground">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-ink-foreground/60">e-mails gerados · {EMAILS.length}</p>
+            <ul className="mt-3 flex flex-col gap-1.5">
+              {EMAILS.map((e, i) => (
+                <li key={e.email} className="flex items-center gap-2 rounded-md bg-ink-foreground/10 px-3 py-2 text-sm">
+                  <Mail className="size-4 text-primary" />
+                  <span className={cn("flex-1 font-mono", i === 0 && "font-semibold")}>{e.email}</span>
+                  <span className="text-xs text-ink-foreground/60">{e.label}</span>
                 </li>
               ))}
             </ul>
+            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-dashed border-primary/60 px-3 py-2 text-sm">
+              <KeyRound className="size-4 text-primary" />
+              <span className="text-ink-foreground/70">Senha inicial:</span>
+              <span className="font-mono font-semibold">Mudar@2026</span>
+              <span className="ml-auto rounded bg-primary px-1.5 py-0.5 text-[11px] font-semibold text-primary-foreground">troca no 1º acesso</span>
+            </div>
           </div>
+          <Button size="lg">Criar e-mail</Button>
+        </section>
 
-          <Button type="submit" variant="console" size="lg" disabled={!canCreate}>
-            Criar e-mail
-          </Button>
-        </form>
-
-        {/* Lista */}
-        <section className="flex flex-col rounded-xl border-2 border-border bg-card/70 p-6">
+        <section className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-4 flex items-baseline justify-between">
             <h2 className="text-lg font-bold">Contas criadas</h2>
-            <span className="font-mono text-sm text-muted-foreground">{accounts.length}</span>
+            <span className="rounded-full bg-accent px-2.5 py-0.5 text-sm font-semibold text-accent-foreground">{ACCOUNTS.length}</span>
           </div>
-
-          {accounts.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-16 text-center">
-              <Mail className="size-6 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Nenhuma conta ainda.</p>
-            </div>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {accounts.map((a) => (
-                <AccountRow
-                  key={a.id}
-                  account={a}
-                  onDelete={() => setAccounts((prev) => prev.filter((x) => x.id !== a.id))}
-                />
-              ))}
-            </ul>
-          )}
+          <ul className="flex flex-col gap-3">
+            {ACCOUNTS.map((a) => (
+              <li key={a.emails[0]} className="rounded-xl border border-border p-3">
+                <div className="flex items-center gap-2">
+                  <span className="rounded bg-ink px-2 py-0.5 text-xs font-semibold text-ink-foreground">{a.role}</span>
+                  <span className="flex-1 truncate font-mono text-sm font-semibold">{a.emails[0]}</span>
+                  <Button variant="ghost" size="icon" aria-label="Copiar"><Copy /></Button>
+                  <Button variant="ghost" size="icon" aria-label="Remover" className="hover:text-destructive"><Trash2 /></Button>
+                </div>
+                <ul className="mt-2 flex flex-col gap-1">
+                  {a.emails.slice(1).map((e) => (
+                    <li key={e} className="flex items-center gap-2 rounded-md bg-muted px-2 py-1 font-mono text-xs">
+                      <Mail className="size-3 text-primary" />{e}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
         </section>
       </div>
-    </main>
+    </>
   );
 }
 
-function AccountRow({ account, onDelete }: { account: Account; onDelete: () => void }) {
-  const roleLabel = ROLES.find((r) => r.id === account.role)?.label ?? account.role;
-  const emails = useMemo(
-    () =>
-      credentialsForRole(
-        account.username,
-        account.email.split("@")[1] ?? DEFAULT_DOMAIN,
-        account.role,
-      ),
-    [account.username, account.email, account.role],
-  );
-
+function CardHead({ icon: Icon, title, sub, dark }: { icon: typeof Layers; title: string; sub: string; dark?: boolean }) {
   return (
-    <li className="group animate-row-in rounded-lg border border-border bg-background p-3">
-      <div className="flex items-center gap-2">
-        <span className="rounded bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">
-          {roleLabel}
-        </span>
-        <span className="flex-1 truncate font-mono text-sm font-medium">{account.email}</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Copiar e-mail"
-          onClick={() => {
-            navigator.clipboard.writeText(account.email);
-            toast("E-mail copiado");
-          }}
-        >
-          <Copy />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Remover conta"
-          className="hover:text-destructive"
-          onClick={onDelete}
-        >
-          <Trash2 />
-        </Button>
+    <div className="flex items-start gap-3">
+      <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary"><Icon className="size-5" /></div>
+      <div>
+        <h2 className="text-lg font-bold">{title}</h2>
+        <p className={cn("text-sm", dark ? "text-ink-foreground/60" : "text-muted-foreground")}>{sub}</p>
       </div>
-      <ul className="mt-2 flex flex-col gap-1">
-        {emails.slice(1).map((g) => {
-          const Icon = ICONS[g.systemId];
-          const label = SYSTEMS.find((s) => s.id === g.systemId)?.label;
-          return (
-            <li
-              key={g.systemId}
-              title={label}
-              className="flex items-center gap-2 rounded border border-border px-2 py-1 text-xs"
-            >
-              <Icon className="size-3 shrink-0 text-muted-foreground" />
-              <span className="flex-1 truncate font-mono">{g.email}</span>
-              <span className="hidden shrink-0 text-[11px] text-muted-foreground sm:inline">
-                {label}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-      <PasswordNote
-        password={emails[0]?.password ?? ""}
-        mustChange={emails[0]?.mustChangePassword ?? false}
-        className="mt-2"
-        compact
-      />
-    </li>
+    </div>
   );
 }
 
-function PasswordNote({
-  password,
-  mustChange,
-  className,
-  compact = false,
-}: {
-  password: string;
-  mustChange: boolean;
-  className?: string;
-  compact?: boolean;
-}) {
+function FacialScreen() {
+  const [sel, setSel] = useState<string[]>(TERMINALS.map((t) => t.name));
+  const all = sel.length === TERMINALS.length;
   return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center gap-2 rounded-md border border-dashed border-primary/50 bg-card",
-        compact ? "px-2 py-1 text-xs" : "px-3 py-2 text-sm",
-        className,
-      )}
-    >
-      <KeyRound className={cn("shrink-0 text-primary", compact ? "size-3" : "size-4")} />
-      <span className="text-muted-foreground">Senha inicial{compact ? "" : " (todos os e-mails)"}:</span>
-      <span className="font-mono font-semibold">{password}</span>
-      <button
-        type="button"
-        aria-label="Copiar senha"
-        className="rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
-        onClick={() => {
-          navigator.clipboard.writeText(password);
-          toast("Senha copiada");
-        }}
-      >
-        <Copy className={compact ? "size-3" : "size-3.5"} />
-      </button>
-      {mustChange && (
-        <span className="ml-auto rounded bg-accent px-1.5 py-0.5 text-[11px] font-semibold text-accent-foreground">
-          troca obrigatória no 1º acesso
-        </span>
-      )}
-    </div>
+    <>
+      <Title kicker="controle de acesso" title="Cadastro de facial" />
+      <div className="flex flex-col gap-6">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-pop">
+          <CardHead icon={UserPlus} title="Identificação do Usuário" sub="Dados de cadastro e identificador numérico interno da facial" />
+          <div className="mt-6 grid gap-5 md:grid-cols-3">
+            <div>
+              <label className="text-sm font-semibold">Código na Facial (ID)</label>
+              <input className={cn(input, "mt-2 font-mono")} defaultValue="6027" />
+              <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-primary"><Sparkles className="size-3" />Sugestão automática (próximo disponível)</p>
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Matrícula / Registro</label>
+              <input className={cn(input, "mt-2")} placeholder="Ex: 2024001 ou CPF" />
+              <p className="mt-1.5 text-xs text-muted-foreground">Número de matrícula no RH ou código</p>
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Nome Completo</label>
+              <input className={cn(input, "mt-2")} placeholder="Ex: Carlos Eduardo Silva" />
+              <p className="mt-1.5 text-xs text-muted-foreground">Nome exibido na tela da facial</p>
+            </div>
+          </div>
+          <div className="mt-6 border-t border-border pt-5">
+            <p className="text-sm font-semibold">Foto para Reconhecimento Facial <span className="font-normal text-muted-foreground">(opcional)</span></p>
+            <div className="mt-3 flex gap-4">
+              <button className="flex flex-1 items-center justify-center gap-4 rounded-xl border-2 border-dashed border-input py-8 transition-colors hover:border-primary hover:bg-accent/40">
+                <div className="grid size-12 place-items-center rounded-full bg-primary/15 text-primary"><CloudUpload className="size-6" /></div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold">Clique para selecionar foto</p>
+                  <p className="text-xs text-muted-foreground">Recomendado: JPEG até 500 KB, rosto centralizado e boa iluminação</p>
+                </div>
+              </button>
+              <div className="grid w-24 place-items-center rounded-xl bg-ink text-ink-foreground/60">
+                <div className="flex flex-col items-center gap-1 text-xs"><Camera className="size-5" />Sem foto</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl bg-ink p-6 text-ink-foreground">
+          <div className="flex items-start justify-between gap-4">
+            <CardHead icon={Layers} title="Terminais de Destino" sub="Selecione para quais faciais as credenciais e acessos serão sincronizados" dark />
+            <button onClick={() => setSel(all ? [] : TERMINALS.map((t) => t.name))} className="shrink-0 text-sm font-semibold hover:text-primary">
+              {all ? "Desmarcar todos" : "Marcar todos"}
+            </button>
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {TERMINALS.map((t) => {
+              const on = sel.includes(t.name);
+              return (
+                <button key={t.name} onClick={() => setSel((p) => (on ? p.filter((x) => x !== t.name) : [...p, t.name]))}
+                  className={cn("flex items-start gap-3 rounded-xl border p-3 text-left transition-colors",
+                    on ? "border-primary bg-primary/15" : "border-ink-foreground/15 hover:border-ink-foreground/40")}>
+                  <span className={cn("mt-0.5 grid size-5 shrink-0 place-items-center rounded", on ? "bg-primary text-primary-foreground" : "border border-ink-foreground/40")}>
+                    {on && <Check className="size-3.5" />}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold">{t.name}</span>
+                    <span className="block truncate font-mono text-xs text-ink-foreground/60">{t.url}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">{sel.length} terminais selecionados</p>
+          <Button size="lg"><Send />Cadastrar e Enviar</Button>
+        </div>
+      </div>
+    </>
   );
 }
