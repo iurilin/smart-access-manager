@@ -86,7 +86,7 @@ function EmailsScreen() {
     <>
       <Title kicker="provisionamento" title="Novo e-mail corporativo" />
       <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-        <section className="flex flex-col gap-6 rounded-2xl border border-border bg-card p-6 shadow-pop">
+        <section className="flex flex-col gap-6 rounded-2xl border border-border bg-card p-6">
           <div>
             <label className="text-sm font-semibold">Nome e último nome</label>
             <input className={cn(input, "mt-2 font-mono text-base")} placeholder="joao.santos" defaultValue="joao.santos" />
@@ -197,7 +197,7 @@ function FacialScreen() {
         </aside>
 
         <div className="flex flex-col gap-6">
-          <section className="rounded-2xl border border-border bg-card p-6 shadow-pop">
+          <section className="rounded-2xl border border-border bg-card p-6">
             <CardHead icon={UserPlus} title="Identificação do usuário" sub="Dados de cadastro e ID interno da facial" />
             <div className="mt-6 grid gap-5 sm:grid-cols-[140px_1fr]">
               <div>
